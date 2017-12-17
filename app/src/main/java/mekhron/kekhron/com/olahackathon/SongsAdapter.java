@@ -47,13 +47,14 @@ public class SongsAdapter extends RecyclerView.Adapter<SongsAdapter.ViewHolder> 
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         private TextView tvSongName, tvArtistsName;
-        private ImageView ivSong;
+        private ImageView ivSong, ivPlay;
 
         public ViewHolder(View itemView) {
             super(itemView);
             tvSongName = itemView.findViewById(R.id.tv_song_name);
             tvArtistsName = itemView.findViewById(R.id.tv_artists_name);
             ivSong = itemView.findViewById(R.id.iv_song_image);
+            ivPlay = itemView.findViewById(R.id.iv_play);
         }
 
         public void setViews(int position) {
@@ -64,6 +65,7 @@ public class SongsAdapter extends RecyclerView.Adapter<SongsAdapter.ViewHolder> 
                     .load(Uri.parse(song.getCover_image()))
                     .apply(new RequestOptions().centerCrop())
                     .into(ivSong);
+
         }
     }
 }

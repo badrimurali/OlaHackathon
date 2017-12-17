@@ -25,7 +25,7 @@ public class CustomSnackBar {
                 snackbar.dismiss();
             }
         })
-                .setActionTextColor(ContextCompat.getColor(activity, R.color.white)).show();
+                .setActionTextColor(ContextCompat.getColor(activity, R.color.text_color_white)).show();
     }
 
     public static void dismiss(){

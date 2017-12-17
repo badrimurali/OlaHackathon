@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="50dp">
     <android.support.v7.widget.CardView
         android:id="@+id/cv_ssong_item"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:layout_marginBottom="10dp"
-        android:background="@color/colorPrimary">
+        android:layout_marginBottom="10dp">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -24,24 +24,32 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
-                android:orientation="vertical"
-                android:background="@color/colorPrimary">
+                android:orientation="vertical">
                 <TextView
                     android:id="@+id/tv_song_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/white"/>
+                    android:layout_marginStart="5dp"
+                    android:background="@color/app_bg_color_2"/>
                 <TextView
                     android:id="@+id/tv_artists_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/white"/>
+                    android:layout_marginStart="5dp"
+                    android:background="@color/app_bg_color_2"/>
             </LinearLayout>
-            <ImageView
-                android:id="@+id/iv_play"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.5"/>
+                android:layout_weight="0.5"
+                android:gravity="center">
+                <ImageView
+                    android:id="@+id/iv_play"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_play"/>
+
+            </LinearLayout>
         </LinearLayout>
 
 
