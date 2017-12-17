@@ -23,10 +23,12 @@ import mekhron.kekhron.com.olahackathon.Model.Song;
 public class SongsAdapter extends RecyclerView.Adapter<SongsAdapter.ViewHolder> {
     private Context context;
     private List<Song> songs;
+    private OnClickListener onClickListener;
 
-    public SongsAdapter(Context context, List<Song> songs) {
+    public SongsAdapter(Context context, List<Song> songs, OnClickListener onClickListener) {
         this.context = context;
         this.songs = songs;
+        this.onClickListener = onClickListener;
     }
 
     @Override
@@ -57,7 +59,7 @@ public class SongsAdapter extends RecyclerView.Adapter<SongsAdapter.ViewHolder> 
             ivPlay = itemView.findViewById(R.id.iv_play);
         }
 
-        public void setViews(int position) {
+        public void setViews(final int position) {
             Song song = songs.get(position);
             tvSongName.setText(song.getSong());
             tvArtistsName.setText(song.getArtists());
@@ -66,6 +68,16 @@ public class SongsAdapter extends RecyclerView.Adapter<SongsAdapter.ViewHolder> 
                     .apply(new RequestOptions().centerCrop())
                     .into(ivSong);
 
+            ivPlay.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    onClickListener.onClick(position);
+                }
+            });
         }
+    }
+
+    public interface OnClickListener {
+        void onClick(int position);
     }
 }

@@ -2,6 +2,7 @@ package mekhron.kekhron.com.olahackathon;
 
 import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.content.Intent;
 import android.database.Cursor;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +15,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -25,11 +31,12 @@ import mekhron.kekhron.com.olahackathon.Rest.RestServices;
 import mekhron.kekhron.com.olahackathon.Sqlite.SongsSqliteHelper;
 import mekhron.kekhron.com.olahackathon.Utils.SharedPref;
 
-public class LandingScreen extends AppCompatActivity {
+public class LandingScreen extends AppCompatActivity implements SongsAdapter.OnClickListener {
 
     private ProgressDialog progressDialog;
     private RecyclerView rvSongs;
     private SongsSqliteHelper songsSqliteHelper;
+    private List<Song> songsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +56,7 @@ public class LandingScreen extends AppCompatActivity {
                     progressDialog.dismiss();
                 System.out.println("asdf songs "+ new Gson().toJson(songs));
                 songs = sort(songs);
+                songsList = songs;
                 SharedPref.saveSongs(LandingScreen.this, songs);
                 for(Song s : songs) {
                     songsSqliteHelper.insert(s);
@@ -71,7 +79,7 @@ public class LandingScreen extends AppCompatActivity {
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(LandingScreen.this);
         rvSongs.setNestedScrollingEnabled(false);
         rvSongs.setLayoutManager(layoutManager);
-        SongsAdapter adapter = new SongsAdapter(LandingScreen.this, songs);
+        SongsAdapter adapter = new SongsAdapter(LandingScreen.this, songs, this);
         rvSongs.setAdapter(adapter);
     }
 
@@ -109,7 +117,7 @@ public class LandingScreen extends AppCompatActivity {
                         System.out.println("asdf search "+cursor.getString(0)+" "+
                                 cursor.getString(1)+" "+cursor.getString(2)+" "+cursor.getString(3));
                     }
-                    SongsAdapter songsAdapter = new SongsAdapter(LandingScreen.this, songs);
+                    SongsAdapter songsAdapter = new SongsAdapter(LandingScreen.this, songs, LandingScreen.this);
                     rvSongs.setAdapter(songsAdapter);
                 }
                 return false;
@@ -142,5 +150,12 @@ public class LandingScreen extends AppCompatActivity {
             }
         }
         return sortedSongs;
+    }
+
+    @Override
+    public void onClick(int position) {
+        Intent i = new Intent(LandingScreen.this, MusicPlayer.class);
+        i.putExtra("song", new Gson().toJson(songsList.get(position)));
+        startActivity(i);
     }
 }

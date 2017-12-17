@@ -39,7 +39,7 @@ public class SharedPref {
         saveStringInSp(context, SONGS_LIST_KEY, new Gson().toJson(songs));
     }
 
-    public List getSongs(Context context) {
+    public static List getSongs(Context context) {
         return new Gson().fromJson(getStringFromSP(context, SONGS_LIST_KEY), List.class);
     }
 
