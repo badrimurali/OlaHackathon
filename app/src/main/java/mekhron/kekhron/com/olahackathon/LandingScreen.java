@@ -155,7 +155,7 @@ public class LandingScreen extends AppCompatActivity implements SongsAdapter.OnC
     @Override
     public void onClick(int position) {
         Intent i = new Intent(LandingScreen.this, MusicPlayer.class);
-        i.putExtra("song", new Gson().toJson(songsList.get(position)));
+        i.putExtra("position", position);
         startActivity(i);
     }
 }

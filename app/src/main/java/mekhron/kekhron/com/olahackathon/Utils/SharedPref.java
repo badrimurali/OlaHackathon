@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import mekhron.kekhron.com.olahackathon.Model.Song;
@@ -39,8 +40,8 @@ public class SharedPref {
         saveStringInSp(context, SONGS_LIST_KEY, new Gson().toJson(songs));
     }
 
-    public static List<Song> getSongs(Context context) {
-        return new Gson().fromJson(getStringFromSP(context, SONGS_LIST_KEY), List.class);
+    public static String getSongs(Context context) {
+        return getStringFromSP(context, SONGS_LIST_KEY);
     }
 
 }

@@ -1,5 +1,7 @@
 package mekhron.kekhron.com.olahackathon.Model;
 
+import java.io.Serializable;
+
 /**
  * Created by badri on 17/12/17.
  */

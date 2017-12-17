@@ -37,18 +37,26 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import mekhron.kekhron.com.olahackathon.Model.Song;
+import mekhron.kekhron.com.olahackathon.Utils.SharedPref;
+
+import static mekhron.kekhron.com.olahackathon.Utils.SharedPref.*;
 
 /**
  * Created by badri on 17/12/17.
  */
 
 public class MusicPlayer extends AppCompatActivity{
-    private Song song;
     private ProgressDialog progressDialog;
     private ImageView ivCover, ivPlayPause, ivRewind, ivForward;
     private TextView tvSongName, tvArtistsName, tvDuration;
@@ -56,6 +64,8 @@ public class MusicPlayer extends AppCompatActivity{
     private ExoPlayer exoPlayer;
     private int playToggle = 0;
     private int seekCache = 0;
+    private List<Song> songs;
+    private int position;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +77,27 @@ public class MusicPlayer extends AppCompatActivity{
             finish();
             return;
         }
-        song = new Gson().fromJson(bundle.getString("song"), Song.class);
+        position = bundle.getInt("position");
+        JSONArray array = null;
+        songs = new ArrayList<>();
+        try {
+            array = new JSONArray(getSongs(MusicPlayer.this));
+            for(int i =0; i< array.length(); i++) {
+                try {
+                    JSONObject object = array.getJSONObject(i);
+                    Song song = new Song();
+                    song.setSong(object.getString("song"));
+                    song.setUrl(object.getString("url"));
+                    song.setCover_image(object.getString("cover_image"));
+                    song.setArtists(object.getString("artists"));
+                    songs.add(song);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         ivCover = findViewById(R.id.iv_cover_image);
         tvSongName = findViewById(R.id.tv_song_name);
         tvArtistsName = findViewById(R.id.tv_artists_name);
@@ -79,14 +109,16 @@ public class MusicPlayer extends AppCompatActivity{
         ivPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                System.out.println("asdf playtoggle before "+ playToggle);
                 if(playToggle == 1) {
-                    ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_play));
+                    ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
                     exoPlayer.setPlayWhenReady(true);
                 } else {
-                    ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
+                    ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_play));
                     exoPlayer.setPlayWhenReady(false);
                 }
                 playToggle = playToggle == 1 ? 0 : 1;
+                System.out.println("asdf playtoggle after "+ playToggle);
             }
         });
 
@@ -108,7 +140,10 @@ public class MusicPlayer extends AppCompatActivity{
         ivForward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                position = position == songs.size() -1 ? 0 : position + 1;
+                initMediaPlayer(songs.get(position).getUrl(), songs.get(position).getCover_image());
+                tvArtistsName.setText(songs.get(position).getArtists());
+                tvSongName.setText(songs.get(position).getSong());
             }
         });
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -139,15 +174,11 @@ public class MusicPlayer extends AppCompatActivity{
                 return true;
             }
         });
-        if(song != null) {
-            initMediaPlayer();
+        if(songs != null) {
+            initMediaPlayer(songs.get(position).getUrl(), songs.get(position).getCover_image());
         }
-        Glide.with(this)
-                .load(Uri.parse(song.getCover_image()))
-                .apply(RequestOptions.circleCropTransform())
-                .into(ivCover);
-        tvSongName.setText(song.getSong());
-        tvArtistsName.setText(song.getArtists());
+        tvSongName.setText(songs.get(position).getSong());
+        tvArtistsName.setText(songs.get(position).getArtists());
     }
 
     Runnable runnable = new Runnable() {
@@ -166,10 +197,17 @@ public class MusicPlayer extends AppCompatActivity{
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
     }
 
-    private void initMediaPlayer() {
+    private void initMediaPlayer(String url, String coverImage) {
+        if(exoPlayer != null) {
+            exoPlayer.stop();
+            exoPlayer.release();
+        }
+        Glide.with(this)
+                .load(Uri.parse(coverImage))
+                .apply(RequestOptions.circleCropTransform())
+                .into(ivCover);
         Handler mHandler = new Handler();
 
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter(mHandler, new BandwidthMeter.EventListener() {
@@ -179,7 +217,7 @@ public class MusicPlayer extends AppCompatActivity{
         });
 
         String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:40.0) Gecko/20100101 Firefox/40.0";
-        Uri uri = Uri.parse(song.getUrl());
+        Uri uri = Uri.parse(url);
         DataSource.Factory dataSourceFactory = new DefaultHttpDataSourceFactory(
                 userAgent, null,
                 DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
@@ -187,7 +225,7 @@ public class MusicPlayer extends AppCompatActivity{
                 true);
 
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(song.getUrl(), new HashMap<String, String>());
+        mediaMetadataRetriever.setDataSource(url, new HashMap<String, String>());
         Long duration = Long.valueOf(mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
         Long minutes = TimeUnit.MILLISECONDS.toMinutes(duration);
         Long seconds = TimeUnit.MILLISECONDS.toSeconds(duration) % 60;
@@ -218,20 +256,16 @@ public class MusicPlayer extends AppCompatActivity{
 
             @Override
             public void onLoadingChanged(boolean isLoading) {
-                System.out.println("asdf isLoading "+ isLoading);
                 if(isLoading) {
-                    System.out.println("asdf loading if "+ isLoading);
                     progressDialog = new ProgressDialog(MusicPlayer.this);
                     progressDialog.setCancelable(false);
                     progressDialog.setMessage("Loading...");
                     progressDialog.show();
                 }
                 else {
-                    System.out.println("asdf loading else "+ isLoading);
                     if (progressDialog != null && progressDialog.isShowing()) {
                         progressDialog.dismiss();
                     }
-                    playToggle = 1;
                     ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
                 }
             }
