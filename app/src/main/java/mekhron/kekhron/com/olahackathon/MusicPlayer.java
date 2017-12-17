@@ -2,12 +2,19 @@ package mekhron.kekhron.com.olahackathon;
 
 import android.app.ProgressDialog;
 import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -22,23 +29,18 @@ import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.upstream.Allocator;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import mekhron.kekhron.com.olahackathon.Model.Song;
-import mekhron.kekhron.com.olahackathon.Utils.SharedPref;
 
 /**
  * Created by badri on 17/12/17.
@@ -46,14 +48,19 @@ import mekhron.kekhron.com.olahackathon.Utils.SharedPref;
 
 public class MusicPlayer extends AppCompatActivity{
     private Song song;
-    ProgressDialog progressDialog;
+    private ProgressDialog progressDialog;
+    private ImageView ivCover, ivPlayPause, ivRewind, ivForward;
+    private TextView tvSongName, tvArtistsName, tvDuration;
 
-
+    private SeekBar seekBar;
+    private ExoPlayer exoPlayer;
+    private int playToggle = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.avtivity_music_player);
+        setUpToolbar();
         Bundle bundle = getIntent().getExtras();
         progressDialog = new ProgressDialog(MusicPlayer.this);
         progressDialog.setCancelable(false);
@@ -64,9 +71,50 @@ public class MusicPlayer extends AppCompatActivity{
             return;
         }
         song = new Gson().fromJson(bundle.getString("song"), Song.class);
+        ivCover = findViewById(R.id.iv_cover_image);
+        tvSongName = findViewById(R.id.tv_song_name);
+        tvArtistsName = findViewById(R.id.tv_artists_name);
+        tvDuration = findViewById(R.id.tv_duration);
+        ivPlayPause = findViewById(R.id.iv_play_pause);
+        ivRewind = findViewById(R.id.iv_rewind);
+        ivForward = findViewById(R.id.iv_forward);
+        seekBar = findViewById(R.id.seek_bar);
+        ivPlayPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                playToggle = playToggle == 1 ? 0 : 1;
+                if(playToggle == 1) {
+                    ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
+                    exoPlayer.stop();
+                } else {
+                    ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_play));
+                }
+
+            }
+        });
+
+        ivRewind.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                exoPlayer.seekToDefaultPosition();
+            }
+        });
         if(song != null) {
             initMediaPlayer();
         }
+        Glide.with(this)
+                .load(Uri.parse(song.getCover_image()))
+                .apply(RequestOptions.circleCropTransform())
+                .into(ivCover);
+        tvSongName.setText(song.getSong());
+        tvArtistsName.setText(song.getArtists());
+    }
+
+    private void setUpToolbar() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
     }
 
     private void initMediaPlayer() {
@@ -75,8 +123,6 @@ public class MusicPlayer extends AppCompatActivity{
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter(mHandler, new BandwidthMeter.EventListener() {
             @Override
             public void onBandwidthSample(int elapsedMs, long bytes, long bitrate) {
-                System.out.println(" asdf bandwidth sample  ");
-
             }
         });
 
@@ -92,11 +138,9 @@ public class MusicPlayer extends AppCompatActivity{
         mediaMetadataRetriever.setDataSource(song.getUrl(), new HashMap<String, String>());
         Long duration = Long.valueOf(mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
         Long minutes = TimeUnit.MILLISECONDS.toMinutes(duration);
-        System.out.println("asdf duration minutes "+ minutes);
-        System.out.println("asdf duration "+mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-        System.out.println("asdf artist "+mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
-        System.out.println("asdf author "+mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_AUTHOR));
+        Long seconds = TimeUnit.MILLISECONDS.toSeconds(duration) % 60;
 
+        tvDuration.setText(String.format("%s.%s", String.valueOf(minutes), String.valueOf(seconds)));
 
         MediaSource mediaSource = new ExtractorMediaSource(uri, dataSourceFactory, Mp3Extractor.FACTORY,
                 mHandler, new ExtractorMediaSource.EventListener() {
@@ -108,7 +152,7 @@ public class MusicPlayer extends AppCompatActivity{
 
         TrackSelector trackSelector = new DefaultTrackSelector(bandwidthMeter);
         DefaultLoadControl loadControl = new DefaultLoadControl();
-        ExoPlayer exoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
+        exoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl);
         exoPlayer.addListener(new Player.EventListener() {
             @Override
             public void onTimelineChanged(Timeline timeline, Object manifest) {
@@ -122,18 +166,19 @@ public class MusicPlayer extends AppCompatActivity{
 
             @Override
             public void onLoadingChanged(boolean isLoading) {
-
+                System.out.println("asdf isLoading "+ isLoading);
+                if(!isLoading) {
+                    if (progressDialog != null && progressDialog.isShowing()) {
+                        System.out.println(" asdf player state change");
+                        progressDialog.dismiss();
+                    }
+                    playToggle = 1;
+                    ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
+                }
             }
 
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                if(playWhenReady) {
-                    if(progressDialog != null && progressDialog.isShowing()) {
-                        System.out.println(" asdf player state change");
-                        progressDialog.dismiss();
-                    }
-                }
-
             }
 
             @Override
@@ -172,4 +217,21 @@ public class MusicPlayer extends AppCompatActivity{
 
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if(item.getItemId() == android.R.id.home) {
+            exoPlayer.stop();
+            finish();
+        }
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        exoPlayer.stop();
+        finish();
+
+    }
 }
