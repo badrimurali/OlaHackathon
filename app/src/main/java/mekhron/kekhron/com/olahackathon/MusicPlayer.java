@@ -109,7 +109,6 @@ public class MusicPlayer extends AppCompatActivity{
         ivPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                System.out.println("asdf playtoggle before "+ playToggle);
                 if(playToggle == 1) {
                     ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
                     exoPlayer.setPlayWhenReady(true);
@@ -118,7 +117,6 @@ public class MusicPlayer extends AppCompatActivity{
                     exoPlayer.setPlayWhenReady(false);
                 }
                 playToggle = playToggle == 1 ? 0 : 1;
-                System.out.println("asdf playtoggle after "+ playToggle);
             }
         });
 
@@ -149,7 +147,6 @@ public class MusicPlayer extends AppCompatActivity{
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                System.out.println("asdf i "+ i);
                 exoPlayer.seekTo(exoPlayer.getCurrentPosition() + (i > seekCache ? i : -seekCache) * 1000);
                 seekCache = i;
             }
@@ -272,7 +269,6 @@ public class MusicPlayer extends AppCompatActivity{
 
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                System.out.println("asdf play back state "+ playbackState);
             }
 
             @Override

@@ -54,7 +54,6 @@ public class LandingScreen extends AppCompatActivity implements SongsAdapter.OnC
             public void consume(List<Song> songs) {
                 if (progressDialog != null && progressDialog.isShowing())
                     progressDialog.dismiss();
-                System.out.println("asdf songs "+ new Gson().toJson(songs));
                 songs = sort(songs);
                 songsList = songs;
                 SharedPref.saveSongs(LandingScreen.this, songs);
@@ -114,8 +113,6 @@ public class LandingScreen extends AppCompatActivity implements SongsAdapter.OnC
                         song.setCover_image(cursor.getString(2));
                         song.setUrl(cursor.getString(3));
                         songs.add(song);
-                        System.out.println("asdf search "+cursor.getString(0)+" "+
-                                cursor.getString(1)+" "+cursor.getString(2)+" "+cursor.getString(3));
                     }
                     SongsAdapter songsAdapter = new SongsAdapter(LandingScreen.this, songs, LandingScreen.this);
                     rvSongs.setAdapter(songsAdapter);
