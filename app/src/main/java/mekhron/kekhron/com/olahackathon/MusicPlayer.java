@@ -3,6 +3,7 @@ package mekhron.kekhron.com.olahackathon;
 import android.app.ProgressDialog;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -51,10 +52,10 @@ public class MusicPlayer extends AppCompatActivity{
     private ProgressDialog progressDialog;
     private ImageView ivCover, ivPlayPause, ivRewind, ivForward;
     private TextView tvSongName, tvArtistsName, tvDuration;
-
     private SeekBar seekBar;
     private ExoPlayer exoPlayer;
     private int playToggle = 0;
+    private int seekCache = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,10 +63,6 @@ public class MusicPlayer extends AppCompatActivity{
         setContentView(R.layout.avtivity_music_player);
         setUpToolbar();
         Bundle bundle = getIntent().getExtras();
-        progressDialog = new ProgressDialog(MusicPlayer.this);
-        progressDialog.setCancelable(false);
-        progressDialog.setMessage("loading");
-        progressDialog.show();
         if(bundle == null) {
             finish();
             return;
@@ -82,14 +79,14 @@ public class MusicPlayer extends AppCompatActivity{
         ivPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                playToggle = playToggle == 1 ? 0 : 1;
                 if(playToggle == 1) {
-                    ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
-                    exoPlayer.stop();
-                } else {
                     ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_play));
+                    exoPlayer.setPlayWhenReady(true);
+                } else {
+                    ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
+                    exoPlayer.setPlayWhenReady(false);
                 }
-
+                playToggle = playToggle == 1 ? 0 : 1;
             }
         });
 
@@ -97,6 +94,49 @@ public class MusicPlayer extends AppCompatActivity{
             @Override
             public void onClick(View view) {
                 exoPlayer.seekToDefaultPosition();
+            }
+        });
+
+        ivRewind.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                exoPlayer.seekTo(exoPlayer.getCurrentPosition() - 5);
+                return true;
+            }
+        });
+
+        ivForward.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                System.out.println("asdf i "+ i);
+                exoPlayer.seekTo(exoPlayer.getCurrentPosition() + (i > seekCache ? i : -seekCache) * 1000);
+                seekCache = i;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        ivForward.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                exoPlayer.seekTo(exoPlayer.getCurrentPosition() + (5 * 1000));
+                seekBar.setProgress(seekBar.getProgress() + 5);
+                seekBar.postDelayed(runnable, 1000);
+                return true;
             }
         });
         if(song != null) {
@@ -108,6 +148,18 @@ public class MusicPlayer extends AppCompatActivity{
                 .into(ivCover);
         tvSongName.setText(song.getSong());
         tvArtistsName.setText(song.getArtists());
+    }
+
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            updateSeekbar();
+        }
+    };
+
+    private void updateSeekbar() {
+        seekBar.setProgress((int)exoPlayer.getCurrentPosition());
+        seekBar.postDelayed(runnable, 1000);
     }
 
     private void setUpToolbar() {
@@ -167,9 +219,16 @@ public class MusicPlayer extends AppCompatActivity{
             @Override
             public void onLoadingChanged(boolean isLoading) {
                 System.out.println("asdf isLoading "+ isLoading);
-                if(!isLoading) {
+                if(isLoading) {
+                    System.out.println("asdf loading if "+ isLoading);
+                    progressDialog = new ProgressDialog(MusicPlayer.this);
+                    progressDialog.setCancelable(false);
+                    progressDialog.setMessage("Loading...");
+                    progressDialog.show();
+                }
+                else {
+                    System.out.println("asdf loading else "+ isLoading);
                     if (progressDialog != null && progressDialog.isShowing()) {
-                        System.out.println(" asdf player state change");
                         progressDialog.dismiss();
                     }
                     playToggle = 1;
@@ -179,6 +238,7 @@ public class MusicPlayer extends AppCompatActivity{
 
             @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                System.out.println("asdf play back state "+ playbackState);
             }
 
             @Override
@@ -232,6 +292,5 @@ public class MusicPlayer extends AppCompatActivity{
         super.onBackPressed();
         exoPlayer.stop();
         finish();
-
     }
 }
