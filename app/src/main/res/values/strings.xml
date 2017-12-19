@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Ola play studios</string>
+    <string name="search_hint">Search song here…</string>
 
 </resources>

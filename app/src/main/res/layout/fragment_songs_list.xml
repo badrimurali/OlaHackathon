@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginBottom="10dp">
+    <android.support.v7.widget.SearchView
+        android:id="@+id/sv_search_song"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        app:defaultQueryHint="@string/search_hint"/>
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_songs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="20dp"
+        android:layout_below="@+id/sv_search_song"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rv_songs"
+        android:gravity="center">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <ImageView
+                android:id="@+id/iv_previous_page"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/ic_skip_previous"/>
+            <TextView
+                android:id="@+id/tv_page"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:gravity="center"
+                android:layout_gravity="center"/>
+            <ImageView
+                android:id="@+id/iv_next_page"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/ic_skip_next"/>
+
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

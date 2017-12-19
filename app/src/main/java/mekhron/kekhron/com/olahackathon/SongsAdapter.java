@@ -2,6 +2,7 @@ package mekhron.kekhron.com.olahackathon;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.google.gson.Gson;
 
 import java.util.List;
 
@@ -49,10 +51,12 @@ public class SongsAdapter extends RecyclerView.Adapter<SongsAdapter.ViewHolder> 
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         private TextView tvSongName, tvArtistsName;
+        CardView cvSongItem;
         private ImageView ivSong, ivPlay;
 
         public ViewHolder(View itemView) {
             super(itemView);
+            cvSongItem = itemView.findViewById(R.id.cv_song_item);
             tvSongName = itemView.findViewById(R.id.tv_song_name);
             tvArtistsName = itemView.findViewById(R.id.tv_artists_name);
             ivSong = itemView.findViewById(R.id.iv_song_image);
@@ -68,7 +72,7 @@ public class SongsAdapter extends RecyclerView.Adapter<SongsAdapter.ViewHolder> 
                     .apply(new RequestOptions().centerCrop())
                     .into(ivSong);
 
-            ivPlay.setOnClickListener(new View.OnClickListener() {
+            cvSongItem.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     onClickListener.onClick(position);

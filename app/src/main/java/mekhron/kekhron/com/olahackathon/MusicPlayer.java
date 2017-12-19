@@ -78,26 +78,7 @@ public class MusicPlayer extends AppCompatActivity{
             return;
         }
         position = bundle.getInt("position");
-        JSONArray array = null;
-        songs = new ArrayList<>();
-        try {
-            array = new JSONArray(getSongs(MusicPlayer.this));
-            for(int i =0; i< array.length(); i++) {
-                try {
-                    JSONObject object = array.getJSONObject(i);
-                    Song song = new Song();
-                    song.setSong(object.getString("song"));
-                    song.setUrl(object.getString("url"));
-                    song.setCover_image(object.getString("cover_image"));
-                    song.setArtists(object.getString("artists"));
-                    songs.add(song);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        songs = SharedPref.getSongs(MusicPlayer.this);
         ivCover = findViewById(R.id.iv_cover_image);
         tvSongName = findViewById(R.id.tv_song_name);
         tvArtistsName = findViewById(R.id.tv_artists_name);
