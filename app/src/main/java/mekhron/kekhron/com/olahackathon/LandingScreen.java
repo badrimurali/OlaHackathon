@@ -37,10 +37,7 @@ import mekhron.kekhron.com.olahackathon.Utils.SharedPref;
 
 public class LandingScreen extends AppCompatActivity
         implements TabLayout.OnTabSelectedListener{
-
-    private ProgressDialog progressDialog;
     private RecyclerView rvSongs;
-    private SongsSqliteHelper songsSqliteHelper;
     private TabLayout tlTabs;
     private ViewPager vpScreens;
     List<TabLayout.Tab> tabs;
@@ -50,15 +47,8 @@ public class LandingScreen extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing_screen);
         setUpToolbar();
-        progressDialog = new ProgressDialog(LandingScreen.this);
-        progressDialog.setMessage("loading");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
-
-        songsSqliteHelper = new SongsSqliteHelper(LandingScreen.this);
         tlTabs = findViewById(R.id.tl_tabs);
         tabs = new ArrayList<>();
-        tabs.add(tlTabs.newTab().setIcon(R.drawable.ic_playlist_play));
         tabs.add(tlTabs.newTab().setIcon(R.drawable.ic_library_music));
         tabs.add(tlTabs.newTab().setIcon(R.drawable.ic_queue_music));
         for (TabLayout.Tab t: tabs) {
@@ -85,26 +75,9 @@ public class LandingScreen extends AppCompatActivity
 
             }
         });
-        RestServices.callSongs(new Consumer<List<Song>>() {
-            @Override
-            public void consume(List<Song> songs) {
-                if (progressDialog != null && progressDialog.isShowing())
-                    progressDialog.dismiss();
-                songs = SharedPref.sort(songs);
-                SharedPref.saveSongs(LandingScreen.this, songs);
-                for(Song s : songs) {
-                    songsSqliteHelper.insert(s);
-                }
-                tabs.get(1).select();
-            }
-        }, new Consumer<String>() {
-            @Override
-            public void consume(String s) {
-                if (progressDialog != null && progressDialog.isShowing())
-                    progressDialog.dismiss();
-                CustomSnackBar.show(LandingScreen.this, "Songs fetch Failed!!", "OK");
-            }
-        });
+
+        tabs.get(0).select();
+        vpScreens.setCurrentItem(0);
     }
     private void setUpToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);

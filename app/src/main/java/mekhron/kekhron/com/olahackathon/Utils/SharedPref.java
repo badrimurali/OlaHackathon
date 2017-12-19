@@ -50,25 +50,27 @@ public class SharedPref {
         JSONArray array = null;
         ArrayList<Song> songs = new ArrayList<>();
         try {
-            array = new JSONArray(getStringFromSP(context, SONGS_LIST_KEY));
-            for(int i =0; i< array.length(); i++) {
-                try {
-                    JSONObject object = array.getJSONObject(i);
-                    Song song = new Song();
-                    song.setSong(object.getString("song"));
-                    song.setUrl(object.getString("url"));
-                    song.setCover_image(object.getString("cover_image"));
-                    song.setArtists(object.getString("artists"));
-                    songs.add(song);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+            if (getStringFromSP(context, SONGS_LIST_KEY) != null) {
+                array = new JSONArray(getStringFromSP(context, SONGS_LIST_KEY));
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        JSONObject object = array.getJSONObject(i);
+                        Song song = new Song();
+                        song.setSong(object.getString("song"));
+                        song.setUrl(object.getString("url"));
+                        song.setCover_image(object.getString("cover_image"));
+                        song.setArtists(object.getString("artists"));
+                        songs.add(song);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-            return songs;
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
+                return songs;
+            } catch(JSONException e){
+                e.printStackTrace();
+                return new ArrayList<>();
+            }
     }
 
 

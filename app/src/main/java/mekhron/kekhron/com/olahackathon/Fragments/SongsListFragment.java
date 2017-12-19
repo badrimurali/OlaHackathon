@@ -1,5 +1,6 @@
 package mekhron.kekhron.com.olahackathon.Fragments;
 
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -20,9 +21,12 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import mekhron.kekhron.com.olahackathon.Consumer;
+import mekhron.kekhron.com.olahackathon.CustomSnackBar;
 import mekhron.kekhron.com.olahackathon.Model.Song;
 import mekhron.kekhron.com.olahackathon.MusicPlayer;
 import mekhron.kekhron.com.olahackathon.R;
+import mekhron.kekhron.com.olahackathon.Rest.RestServices;
 import mekhron.kekhron.com.olahackathon.SongsAdapter;
 import mekhron.kekhron.com.olahackathon.Sqlite.SongsSqliteHelper;
 import mekhron.kekhron.com.olahackathon.Utils.SharedPref;
@@ -42,24 +46,55 @@ public class SongsListFragment extends Fragment implements SongsAdapter.OnClickL
     private static int totalPage = 1;
     private static int startPos = 0;
     private static int endPos = 5;
-    List<Song> songs;
+    List<Song> songsList;
+    private ProgressDialog progressDialog;
+    private SongsSqliteHelper songsSqliteHelper;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_songs_list, container, false);
+        songsSqliteHelper = new SongsSqliteHelper(getActivity());
         return rootView;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        songs = SharedPref.getSongs(getActivity());
-        initViews(rootView, songs);
+        progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage("Loading...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        RestServices.callSongs(new Consumer<List<Song>>() {
+            @Override
+            public void consume(List<Song> songs) {
+                if (progressDialog != null && progressDialog.isShowing())
+                    progressDialog.dismiss();
+                songs = SharedPref.sort(songs);
+                SharedPref.saveSongs(getActivity(), songs);
+                for(Song s : songs) {
+                    songsSqliteHelper.insert(s);
+                }
+                songsList = songs;
+                initViews(songs);
+            }
+        }, new Consumer<String>() {
+            @Override
+            public void consume(String s) {
+                if (progressDialog != null && progressDialog.isShowing())
+                    progressDialog.dismiss();
+                CustomSnackBar.show(getActivity(), "Songs fetch Failed!!", "OK");
+            }
+        });
     }
 
-    private void initViews(View view, final List<Song> songs) {
-        rvSongs = view.findViewById(R.id.rv_songs);
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    private void initViews(final List<Song> songs) {
+        rvSongs = rootView.findViewById(R.id.rv_songs);
         rvSongs.setHasFixedSize(false);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         rvSongs.setNestedScrollingEnabled(true);
@@ -67,12 +102,10 @@ public class SongsListFragment extends Fragment implements SongsAdapter.OnClickL
         ivPrevious = rootView.findViewById(R.id.iv_previous_page);
         tvPage = rootView.findViewById(R.id.tv_page);
         ivNext = rootView.findViewById(R.id.iv_next_page);
-        totalPage = songs.size() / 5;
-        System.out.println("asdf size by 5 "+ songs.size() / 5);
-        totalPage = totalPage + ((songs.size() % 5 == 0) ? 0 : 1);
-        System.out.println("asdf total size "+ songs.size());
-        System.out.println("asdf total page "+ totalPage);
-        System.out.println("asdf current page "+ currentPage);
+        if(songs.size() > 0) {
+            totalPage = songs.size() / 5;
+            totalPage = totalPage + ((songs.size() % 5 == 0) ? 0 : 1);
+        }
         setPageNumber();
         ivPrevious.setEnabled(false);
         ivPrevious.setOnClickListener(new View.OnClickListener() {
@@ -146,12 +179,12 @@ public class SongsListFragment extends Fragment implements SongsAdapter.OnClickL
     }
 
     private void adaptPageNumber() {
-        System.out.println("asdf start pos "+ startPos);
-        System.out.println("asdf end pos "+ endPos);
-        List<Song> subSongs = songs.subList(startPos, endPos);
-        System.out.println("asdf sub list size "+ subSongs.size());
-        adapter = new SongsAdapter(getActivity(), subSongs, SongsListFragment.this);
-        rvSongs.setAdapter(adapter);
+        if(songsList.size() >= endPos) {
+            List<Song> subSongs = songsList.subList(startPos, endPos);
+            System.out.println("asdf sub list size " + subSongs.size());
+            adapter = new SongsAdapter(getActivity(), subSongs, SongsListFragment.this);
+            rvSongs.setAdapter(adapter);
+        }
     }
 
     private void setPageNumber() {
@@ -161,6 +194,7 @@ public class SongsListFragment extends Fragment implements SongsAdapter.OnClickL
     public void onClick(int position) {
         Intent i = new Intent(getActivity(), MusicPlayer.class);
         i.putExtra("position", position);
+        i.putExtra("from", SongsListFragment.class.getSimpleName());
         startActivity(i);
     }
 }

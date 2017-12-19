@@ -21,10 +21,8 @@ public class TabsPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return new PlaylistFragment();
-            case 1:
                 return new SongsListFragment();
-            case 2:
+            case 1:
                 return new SongHistoryFragment();
             default:
                 return null;
@@ -33,6 +31,6 @@ public class TabsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 3;
+        return 2;
     }
 }

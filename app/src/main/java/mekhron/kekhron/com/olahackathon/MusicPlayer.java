@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import mekhron.kekhron.com.olahackathon.Model.Song;
+import mekhron.kekhron.com.olahackathon.Model.SongHistory;
+import mekhron.kekhron.com.olahackathon.Sqlite.HistorySqliteHelper;
 import mekhron.kekhron.com.olahackathon.Utils.SharedPref;
 
 import static mekhron.kekhron.com.olahackathon.Utils.SharedPref.*;
@@ -66,6 +68,7 @@ public class MusicPlayer extends AppCompatActivity{
     private int seekCache = 0;
     private List<Song> songs;
     private int position;
+    private HistorySqliteHelper historySqliteHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +80,7 @@ public class MusicPlayer extends AppCompatActivity{
             finish();
             return;
         }
+        historySqliteHelper = new HistorySqliteHelper(MusicPlayer.this);
         position = bundle.getInt("position");
         songs = SharedPref.getSongs(MusicPlayer.this);
         ivCover = findViewById(R.id.iv_cover_image);
@@ -105,12 +109,18 @@ public class MusicPlayer extends AppCompatActivity{
             @Override
             public void onClick(View view) {
                 exoPlayer.seekToDefaultPosition();
+                seekBar.setProgress(0);
             }
         });
 
         ivRewind.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
+                if(exoPlayer.getCurrentPosition() <= 0) {
+                    exoPlayer.seekToDefaultPosition();
+                    seekBar.setProgress(0);
+                    return true;
+                }
                 exoPlayer.seekTo(exoPlayer.getCurrentPosition() - 5);
                 return true;
             }
@@ -244,6 +254,7 @@ public class MusicPlayer extends AppCompatActivity{
                     if (progressDialog != null && progressDialog.isShowing()) {
                         progressDialog.dismiss();
                     }
+                    recordHistory();
                     ivPlayPause.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause));
                 }
             }
@@ -292,6 +303,7 @@ public class MusicPlayer extends AppCompatActivity{
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if(item.getItemId() == android.R.id.home) {
+            recordHistory();
             exoPlayer.stop();
             finish();
         }
@@ -301,7 +313,16 @@ public class MusicPlayer extends AppCompatActivity{
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        recordHistory();
         exoPlayer.stop();
         finish();
+    }
+
+    private void recordHistory() {
+        SongHistory songHistory = new SongHistory();
+        songHistory.setSong(songs.get(position));
+        songHistory.setSeekPosition(exoPlayer.getCurrentPosition());
+        boolean result = historySqliteHelper.insert(songHistory);
+        System.out.println("asdf history recorded "+result);
     }
 }
